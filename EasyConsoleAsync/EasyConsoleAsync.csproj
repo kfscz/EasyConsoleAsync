@@ -16,7 +16,7 @@
 
   <!-- Package config -->
   <PropertyGroup>
-    <PackageId>AsyncEasyConsole</PackageId>
+    <PackageId>EasyConsoleAsync</PackageId>
     <Authors>splttingatms, reddy6ue, GodEmperorOfTime</Authors>
     <Description>
       EasyConsole is a library to make it easier for developers to build a simple menu interface for a .NET console application.

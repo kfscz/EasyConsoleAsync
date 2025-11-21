@@ -1,0 +1,68 @@
+name: Publish Lib + Create Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # e.g. v1.2.3
+
+permissions:
+  contents: write   # needed to create/upload a Release
+  packages: write   # needed to push to GitHub Packages
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      # name `GH_TOKEN` is important! there is implicit dependcy in `gh` CLI
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO_OWNER: ${{ github.repository_owner }}
+      GITHUB_ACTOR: ${{ github.actor }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Determine version from tag
+        run: echo "PKG_VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+
+      - name: Extract latest changelog notes
+        run: |
+          # Extract content from first ## heading until next ## heading (or EOF)
+          awk '/^## / {if (found) exit; found=1; next} found {print}' CHANGELOG.md > release-notes.md
+
+      - name: Add GitHub Package source
+        run: |
+          dotnet nuget add source \
+            --username "$GITHUB_ACTOR" \
+            --password "$GH_TOKEN" \
+            --store-password-in-clear-text \
+            --name github "https://nuget.pkg.github.com/$REPO_OWNER/index.json"
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release -p:Version=$PKG_VERSION --no-restore
+
+      - name: Pack
+        run: dotnet pack -c Release -p:Version=$PKG_VERSION -o ./artifacts --no-build
+
+      # Publish the package to GitHub Packages (NuGet)
+      - name: Publish to GitHub Packages
+        run: |
+          dotnet nuget push "./artifacts/*.nupkg" \
+            --source "github" \
+            --api-key "$GH_TOKEN" \
+            --skip-duplicate
+
+      # Create a Release and attach nupkg/snupkg as assets
+      - name: Create GitHub Release (with nupkg assets)
+        run: |
+          # Create release from this tag and attach assets (generate notes automatically)
+          gh release create "v${PKG_VERSION}" ./artifacts/*.nupkg \
+            --title "EasyConsoleAsync v${PKG_VERSION}" \
+            --notes-file release-notes.md

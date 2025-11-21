@@ -3,5 +3,5 @@
     <File Path=".editorconfig" />
   </Folder>
   <Project Path="Demo/Demo.csproj" />
-  <Project Path="EasyConsole/EasyConsole.csproj" />
+  <Project Path="EasyConsoleAsync/EasyConsoleAsync.csproj" />
 </Solution>

@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EasyConsole\EasyConsoleAsync.csproj" />
+    <ProjectReference Include="..\EasyConsoleAsync\EasyConsoleAsync.csproj" />
   </ItemGroup>
 
 </Project>
